@@ -1,0 +1,46 @@
+Checklist of Stuff to DO
+========================
+
+Size Reduction
+--------------
+- The benchmark DOESN'T USE the multiply instructions; so the first thing you should do is to axe your multiplier, if you have one, and take credit for the size reduction. All other instructions should work as before. The benchmark does require a 1024-word memory so there's no size reduction possible there.
+
+- The biggest single size reduction comes from eliminating one port on the multi-port main memory by combining the read and write data ports, multiplexing a single 32-bit bus between read and write data (we'll never need both in the same cycle!). Use tristate drivers to send write data to the memory's data pins (the memory has these built-in for sending data back to the processor -- that's what the MOE signal has been controlling). The write-up for the Standard Cell library has more documentation for the memory component.
+
+- Design an incrementer circuit for adding 4 to the PC instead of using a regular 2-input adder. This is easy to do -- just think about an adder where the second input is the constant 4 (i.e., all but one of the input bits is zero!) and then eliminate/simplify the adder logic appropriately.
+
+- Design a shifter unit that uses a single circuit with seven 32-bit shifters to implement both left and right shifts. You can do this because, for example, a right shift can be implemented as a left shift by bit-reversing A[31:0] on the way in, and bit-reversing the answer on the way out. "Bit reverse" means simply flipping the 32-word end-for-end -- we want to shift A[0:31] instead of A[31:0].
+
+- Use logic gates instead of a ROM to generate some of the control signals, e.g., RA2SEL which is needed early in each cycle before the register file can be accessed. You can get some space saving by eliminating a CTL ROM output, but it's not huge and your time is probably better spent on other optimizations. The main benefit of this optimization is a speed improvement for timing critical signals.
+
+
+Time Reduction
+--------------
+- Determine your minimum clock cycle. Here's a recipe:
+	
+	- Look at min observed setup time reported when you click the Stats after simulation completes. Say it says 72.123ns -- this is the amount of time by which you can shorted your clock cycle. We don't recommend trying to shave it too close -- in this case one could shave maybe 72ns from the clock cycle. Note that this number is related to the actual code and data of the benchmark code and the cycle time you can get away with will be smaller than reported by timing analysis, which is computing the worst-case tPD. In real life, your boss will make you use the worst-case number!
+	
+	- Adjust the timing of the clock period (the last number in the clock specification for the Vclk device.
+	
+	- You want the reset signal to go from 1 to 0 after the first clock edge. So change the waveform timing for the reset to have it transition early in the second cycle. The original clock cycle was 100ns, so the original reset waveform transitioned at 101ns or just after the beginning of the second cycle.
+	
+	- Assuming that you haven't made any modifications that change the number of cycles the benchmark takes to run, you can simply adjust the .tran time to 1104 times your new cycle time -- it takes 1104 cycles to complete the benchmark and reach the one-instruction loop at the end. If you change the number of cycles (e.g., by adding branch delay slots with a 2-stage pipeline) then you'll need to look at the plotted waveforms to determine at which cycle you reach the end of the benchmark.
+
+- Minimize load-dependent delays. As you connect the output of a gate to additional inputs, its capacitance increases and so changes in the signal value take longer (see the tR and tF columns in the standard cell documentation). Heavily loaded signals should be buffered to reduce the total delay. There are several strengths of inverters and buffers available for driving different sized loads. Use the timing analyzer (click on the icon with a gate and a little clock) and look for signals in the critical path where the delay is greater than 1ns -- those signals are slow because they are driving many signals, so adding buffers can help speed things up.
+
+- Use inverting logic. NAND, NOR, etc. gates are noticeably faster than their non-inverting counterparts (AND, OR, ...). Rearranging logic to use inverting gates can make a big difference performance along the critical path of your circuit. Positive logic gates are included in the standard cell library because they are often smaller than their inverting logic equivalents and thus may be useful for implementing logic that is not on the critical path.
+
+- Minimize delay along critical paths. Look at the device and cycle for which the minimum observed setup was reported when you clicked Stats. By tracing back through the circuitry that lead to this critical path you should get some good ideas about where your circuit could use a speed boost. It's often possible to rearrange your logic to reduce the number of gate delays along the critical path, sometimes at the cost of additional gates elsewhere but that's a tradeoff which is often worthwhile.
+
+- Use a faster adder architecture for the ALU and branch-offset adder. Consider using an architecture that avoids rippling the carry through all 32 bits of the adder: carry-select and carry-lookahead are two techniques that are described in more detail below.
+reorganize instruction fetch. In a single cycle, an unpipelined Beta can make up to two accesses to the relatively slow main memory (4ns access time for the SRAM-sized memory we've been using). Worse yet, the two accesses are in series: first we access the memory to fetch the current instruction, then a second access is needed for the data if the Beta is executing a LD, LDR or ST.
+
+- With a little reorganization, we can get the two accesses to happen in parallel! The trick is to fetch the next instruction at the end of the current cycle (overlapping with the data access, if any). The time for fetching the instruction is no longer needed at the beginning of the cycle, allowing you to cut almost 4ns from your cycle time. Here's a diagram showing the necessary modifications: (see lab page)
+
+- A two-stage pipeline. (instruction fetch and everything else) can come close to cutting the cycle time in half. A pipelined design is fun but a lot of work, so try the other hints first.
+
+- Our simple ripple-carry adder is quite slow and we can cut many nanoseconds off the cycle time by using an adder architecture that doesn't require the carry to travel through 32 stages of logic. Some good alternatives:
+
+	- Carry-select adder (see article on Wikipedia). Basic idea: do two additions for the high half of the bits, one assuming the carry-in is 0, the other assuming the carry-in is 1. Use a MUX to select the appropriate answers when the correct carry-in from the low half is known.
+
+	- Carry-lookahead adder (see these lecture slides). Basic idea: we can compute the carry-in for each bit using a tree of lookahead modules, resulting in a tPD that grows logarithmically with the size of the inputs instead of linearly.
