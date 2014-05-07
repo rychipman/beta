@@ -1,0 +1,39 @@
+.subckt BOOL alufn[3:0] A[31:0] B[31:0] OUT[31:0]
+Xmux mux4 A[31:0] B[31:0] alufn[0]#32 alufn[1]#32 alufn[2]#32 alufn[3]#32 OUT[31:0]
+.ends
+
+.subckt ARITH alufn[1:0] A[31:0] B[31:0] OUT[31:0] Z V N
+Xadder adder alufn[1:0] A[31:0] B[31:0] add[31:0] Z V N
+Xjoin join add[31:0] OUT[31:0]//Xmux mux2 alufn[1]#32 add[31:0] mult[31:0] OUT[31:0]
+.ends
+
+.subckt SHIFT alufn[1:0] A[31:0] B[4:0] OUT[31:0]
+Xcst constant0 zero
+Xshl SHL A[31:0] B[4:0] shlOut[31:0]
+Xshr SHR A[31:0] B[4:0] shrOut[31:0]
+Xsra SRA A[31:0] B[4:0] sraOut[31:0]
+Xmux 32MUX4 alufn[1:0] shlOut[31:0] zero#32 shrOut[31:0] sraOut[31:0] OUT[31:0]
+.ends
+
+.subckt CMP alufn[3] alufn[1] Z V N OUT[31:0]
+XsigBits constant0 OUT[31:1]
+Xeq join Z equals
+Xlt xor2 N V lessThan
+Xleq leq Z N V leq
+Xcst constant0 zero
+Xmux mux4 alufn[3] alufn[1] equals leq lessThan zero OUT[0]
+.ends
+
+.subckt alu alufn[4:0] a[31:0] b[31:0] out[31:0] z v n
+
+/// Generate outputs from each of BOOL, SHIFT, ARITH, CMP subcircuits:
+xbool BOOL alufn[3:0] a[31:0] b[31:0] boolout[31:0]
+xshift SHIFT alufn[1:0] a[31:0] b[4:0] shiftout[31:0]
+xarith ARITH alufn[1:0] a[31:0] b[31:0] arithout[31:0] z v n
+xcmp CMP alufn[3] alufn[1] z v n cmpout[31:0]
+
+// Combine them, using three multiplexors:
+xmux1 mux2 alufn[4]#32 nonbool[31:0] boolout[31:0] out[31:0]
+xmux2 mux2 alufn[2]#32 arithshift[31:0] cmpout[31:0] nonbool[31:0]
+xmux3 mux2 alufn[3]#32 arithout[31:0] shiftout[31:0] arithshift[31:0]
+.ends

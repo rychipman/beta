@@ -1,0 +1,36 @@
+//Test Jigs
+//.include "/shared/jsim/lab6checkoff.jsim"
+
+//Components
+.include "L6/helpers"
+.include "L6/PC"
+.include "L6/REGFILE"
+.include "L6/CTL"
+.include "L6/ALU"
+
+.subckt beta clk reset irq ia[31:0] id[31:0] ma[31:0] moe mrd[31:0] wr mwd[31:0]
+
+Xpc pc clk reset ia[30:0] broffset[31:0] pcplus4[31:0] pcsel[2:0] JT[31:0]
+Xaddbroffset ADD32 pcplus4[31:0] id[15]#14 id[15:0] gnd#2 gnd broffset[31:0] cout
+
+XmuxASEL MUX32 asel radata[31:0] gnd broffset[30:1] gnd alua[31:0] //don't let supervisor bit into asel!
+XjoinJT join radata[31:0] JT[31:0]
+XnorZ NOR32 radata[31:0] Z
+
+XmuxBSEL MUX32 bsel rbdata[31:0] id[15]#16 id[15:0] alub[31:0]
+XmuxWASEL mux2 wasel#5 id[25:21] vdd#4 gnd waddr[4:0]
+XmuxWDSEL 32MUX4 wdsel[0:1] pcplus4[31:0] aluout[31:0] mrd[31:0] gnd#32 wdata[31:0]
+.connect pcplus4[31] ia[31]
+
+Xirqmux mux2 ia[31] irq gnd irqz //don't allow interrupts in supervisor mode
+Xctl ctl reset irqz Z id[31:26] ra2sel asel bsel wasel alufn[4:0] wdsel[1:0] pcsel[2:0] werf moe wr
+
+Xregfile regfile clk werf ra2sel id[20:16] id[15:11] id[25:21] waddr[4:0] wdata[31:0] radata[31:0] rbdata[31:0]
+
+Xalu alu alufn[4:0] alua[31:0] alub[31:0] aluout[31:0] z v n
+
+Xjoin2 join aluout[31:0] ma[31:0]
+Xjoin3 join rbdata[31:0] mwd[31:0]
+
+
+.ends

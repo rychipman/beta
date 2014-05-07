@@ -1,0 +1,19 @@
+.subckt PCREG d[31:0] clk q[31:0]
+Xreg dreg d[31:0] clk#32 q[31:0]
+.ends
+
+//TODO: get the JT input
+.subckt pc clk reset ia[30:0] broffset[31:0] pcplus4[31:0] pcsel[2:0] JT[31:0]
+Xillop join illop[31:0] vdd gnd#28 vdd gnd#2 //illop at address 4
+Xxadr join xadr[31:0] vdd gnd#27 vdd gnd#3 //xadr at address 8
+Xreset join reset[31:0] vdd gnd#31 //reset at address 0
+Xjt31 and2 JT[31] q[31] JT31 //jump can only clear or maintain supervisor bit
+
+Xmux4 32MUX4 pcsel[0:1] pcplus4[31:0] broffset[31:0] JT31 JT[30:0] illop[31:0] mux4out[31:0]
+Xmux2 MUX32 pcsel[2] mux4out[31:0] xadr[31:0] mux2out[31:0]
+Xresetmux MUX32 reset mux2out[31:0] reset[31:0] d[31:0]
+
+Xreg PCREG d[31:0] clk q[31:0]
+Xadd ADD32 gnd#29 vdd gnd#2 q[31:0] gnd pcplus4[31:0] cout
+Xjoin join q[30:0] ia[30:0]
+.ends

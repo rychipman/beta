@@ -1,0 +1,19 @@
+.subckt r31mux rbit[4:0] inputs[31:0] OUT[31:0]
+Xor4 and4 rbit[4:1] tmp1
+Xor2 and2 rbit[0] tmp1 isr31
+Xmux MUX32 isr31 inputs[31:0] gnd#32 OUT[31:0]
+.ends
+
+//TODO: figure out what to do with waddr[4:0]
+.subckt regfile clk werf ra2sel ra[4:0] rb[4:0] rc[4:0] waddr[4:0]
++ wdata[31:0] radata[31:0] rbdata[31:0]
+Xbcmux mux2 ra2sel#5 rb[4:0] rc[4:0] ra2mux[4:0]
+
+Gregfile memory
++ vdd gnd gnd  ra[4:0]     adata[31:0] // A read port
++ vdd gnd gnd  ra2mux[4:0] bdata[31:0] // B read port
++ gnd clk werf waddr[4:0]  wdata[31:0] // write port
++ width=32 nlocations=31
+Xa31mux r31mux ra[4:0] adata[31:0] radata[31:0]
+Xb31mux r31mux ra2mux[4:0] bdata[31:0] rbdata[31:0]
+.ends
