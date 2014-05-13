@@ -8,7 +8,9 @@
 .include "DP/beta_CTL"
 .include "DP/beta_ALU"
 
-.subckt beta clk reset irq ia[31:0] id[31:0] ma[31:0] moe mrd[31:0] wr mwd[31:0]
+.subckt beta clk reset irq ia[31:0] id_next[31:0] ma[31:0] moe mrd[31:0] wr mwd[31:0]
+
+Xinreg INSTREG id_next[31:0] clk id[31:0]
 
 Xpc pc clk reset ia[30:0] broffset[31:0] pcplus4[31:0] pcsel[2:0] JT[31:0]
 Xaddbroffset ADD32 pcplus4[31:0] id[15]#14 id[15:0] gnd#2 gnd broffset[31:0] cout
@@ -33,4 +35,8 @@ Xjoin2 join aluout[31:0] ma[31:0]
 Xjoin3 join rbdata[31:0] mwd[31:0]
 
 
+.ends
+
+.subckt INSTREG d[31:0] clk q[31:0]
+Xreg dreg d[31:0] clk#32 q[31:0]
 .ends

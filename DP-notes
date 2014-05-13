@@ -5,7 +5,7 @@ Size Reduction
 --------------
 X The benchmark DOESN'T USE the multiply instructions; so the first thing you should do is to axe your multiplier, if you have one, and take credit for the size reduction. All other instructions should work as before. The benchmark does require a 1024-word memory so there's no size reduction possible there.
 
-- The biggest single size reduction comes from eliminating one port on the multi-port main memory by combining the read and write data ports, multiplexing a single 32-bit bus between read and write data (we'll never need both in the same cycle!). Use tristate drivers to send write data to the memory's data pins (the memory has these built-in for sending data back to the processor -- that's what the MOE signal has been controlling). The write-up for the Standard Cell library has more documentation for the memory component.
+X The biggest single size reduction comes from eliminating one port on the multi-port main memory by combining the read and write data ports, multiplexing a single 32-bit bus between read and write data (we'll never need both in the same cycle!). Use tristate drivers to send write data to the memory's data pins (the memory has these built-in for sending data back to the processor -- that's what the MOE signal has been controlling). The write-up for the Standard Cell library has more documentation for the memory component.
 
 X Design an incrementer circuit for adding 4 to the PC instead of using a regular 2-input adder. This is easy to do -- just think about an adder where the second input is the constant 4 (i.e., all but one of the input bits is zero!) and then eliminate/simplify the adder logic appropriately.
 
@@ -35,12 +35,12 @@ X Determine your minimum clock cycle. Here's a recipe:
 - Use a faster adder architecture for the ALU and branch-offset adder. Consider using an architecture that avoids rippling the carry through all 32 bits of the adder: carry-select and carry-lookahead are two techniques that are described in more detail below.
 reorganize instruction fetch. In a single cycle, an unpipelined Beta can make up to two accesses to the relatively slow main memory (4ns access time for the SRAM-sized memory we've been using). Worse yet, the two accesses are in series: first we access the memory to fetch the current instruction, then a second access is needed for the data if the Beta is executing a LD, LDR or ST.
 
-- With a little reorganization, we can get the two accesses to happen in parallel! The trick is to fetch the next instruction at the end of the current cycle (overlapping with the data access, if any). The time for fetching the instruction is no longer needed at the beginning of the cycle, allowing you to cut almost 4ns from your cycle time. Here's a diagram showing the necessary modifications: (see lab page)
+X With a little reorganization, we can get the two accesses to happen in parallel! The trick is to fetch the next instruction at the end of the current cycle (overlapping with the data access, if any). The time for fetching the instruction is no longer needed at the beginning of the cycle, allowing you to cut almost 4ns from your cycle time. Here's a diagram showing the necessary modifications: (see lab page)
 
 - A two-stage pipeline. (instruction fetch and everything else) can come close to cutting the cycle time in half. A pipelined design is fun but a lot of work, so try the other hints first.
 
-- Our simple ripple-carry adder is quite slow and we can cut many nanoseconds off the cycle time by using an adder architecture that doesn't require the carry to travel through 32 stages of logic. Some good alternatives:
+X Our simple ripple-carry adder is quite slow and we can cut many nanoseconds off the cycle time by using an adder architecture that doesn't require the carry to travel through 32 stages of logic. Some good alternatives:
 
-	- Carry-select adder (see article on Wikipedia). Basic idea: do two additions for the high half of the bits, one assuming the carry-in is 0, the other assuming the carry-in is 1. Use a MUX to select the appropriate answers when the correct carry-in from the low half is known.
+	X Carry-select adder (see article on Wikipedia). Basic idea: do two additions for the high half of the bits, one assuming the carry-in is 0, the other assuming the carry-in is 1. Use a MUX to select the appropriate answers when the correct carry-in from the low half is known.
 
 	- Carry-lookahead adder (see these lecture slides). Basic idea: we can compute the carry-in for each bit using a tree of lookahead modules, resulting in a tPD that grows logarithmically with the size of the inputs instead of linearly.
