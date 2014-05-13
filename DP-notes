@@ -7,7 +7,7 @@ X The benchmark DOESN'T USE the multiply instructions; so the first thing you sh
 
 - The biggest single size reduction comes from eliminating one port on the multi-port main memory by combining the read and write data ports, multiplexing a single 32-bit bus between read and write data (we'll never need both in the same cycle!). Use tristate drivers to send write data to the memory's data pins (the memory has these built-in for sending data back to the processor -- that's what the MOE signal has been controlling). The write-up for the Standard Cell library has more documentation for the memory component.
 
-- Design an incrementer circuit for adding 4 to the PC instead of using a regular 2-input adder. This is easy to do -- just think about an adder where the second input is the constant 4 (i.e., all but one of the input bits is zero!) and then eliminate/simplify the adder logic appropriately.
+X Design an incrementer circuit for adding 4 to the PC instead of using a regular 2-input adder. This is easy to do -- just think about an adder where the second input is the constant 4 (i.e., all but one of the input bits is zero!) and then eliminate/simplify the adder logic appropriately.
 
 - Design a shifter unit that uses a single circuit with seven 32-bit shifters to implement both left and right shifts. You can do this because, for example, a right shift can be implemented as a left shift by bit-reversing A[31:0] on the way in, and bit-reversing the answer on the way out. "Bit reverse" means simply flipping the 32-word end-for-end -- we want to shift A[0:31] instead of A[31:0].
 

@@ -1,0 +1,138 @@
+.include "/shared/jsim/stdcell.jsim"
+
+//ARITH add circuit
+.subckt adder alufn[1:0] A[31:0] B[31:0] OUT[31:0] Z V N
+Xxor xor2 B[31:0] alufn[0]#32 xb[31:0]
+Xadder CSADD32 A[31:0] xb[31:0] alufn[0] S[31:0] cOut
+XjoinOUT join S[31:0] OUT[31:0]
+Xz NOR32 S[31:0] Z
+Xn join S[31] N
+Xv checkOverflow A[31] xb[31] S[31] V
+.ends
+
+//32-bit 2-way mux
+.subckt MUX32 s d0[31:0] d1[31:0] OUT[31:0]
+Xmux mux2 s#32 d0[31:0] d1[31:0] OUT[31:0]
+.ends
+
+//32-bit 4-way mux
+.subckt 32MUX4 s0 s1 d0[31:0] d1[31:0] d2[31:0] d3[31:0] OUT[31:0]
+Xmux mux4 s0#32 s1#32 d0[31:0] d1[31:0] d2[31:0] d3[31:0] OUT[31:0]
+.ends
+
+//Arithmetic right shift
+.subckt SRA A[31:0] B[4:0] OUT[31:0]
+Xshift shift A[0:31] B[4:0] A[31] OUT[0:31]
+.ends
+
+//Shift Right
+.subckt SHR A[31:0] B[4:0] OUT[31:0]
+Xshl SHL A[0:31] B[4:0] OUT[0:31]
+.ends
+
+//Shift left
+.subckt SHL A[31:0] B[4:0] OUT[31:0]
+Xgnd constant0 gnd
+Xshift shift A[31:0] B[4:0] gnd OUT[31:0]
+.ends
+
+//Generic shift, for use with SHL and SRA
+.subckt shift A[31:0] B[4:0] GND OUT[31:0]
+Xmux1 mux2 B[4]#32 A[31:0] A[15:0] GND#16 W[31:0]
+Xmux2 mux2 B[3]#32 W[31:0] W[23:0] GND#8 X[31:0]
+Xmux3 mux2 B[2]#32 X[31:0] X[27:0] GND#4 Y[31:0]
+Xmux4 mux2 B[1]#32 Y[31:0] Y[29:0] GND#2 Z[31:0]
+Xmux5 mux2 B[0]#32 Z[31:0] Z[30:0] GND OUT[31:0]
+.ends
+
+//abstracting away the leq circuit
+.subckt leq Z N V OUT
+Xxor xor2 N V xorOut
+Xor or2 Z xorOut OUT
+.ends
+
+//abstracting away the overflow check
+.subckt checkOverflow XA XB S V
+Xinva inverter XA nXA
+Xinvb inverter XB nXB
+Xinvs inverter S nS
+Xleft and3 XA XB nS left
+Xright and3 nXA nXB S right
+Xor or2 left right V
+.ends
+
+//32-input nor gate
+.subckt NOR32 A[31:0] Z
+Xnor nor4 A[7:0] A[15:8] A[23:16] A[31:24] norOut[7:0]
+Xand1 and4 norOut[3:0] andOut1
+Xand2 and4 norOut[7:4] andOut2
+Xand3 and2 andOut1 andOut2 Z
+.ends
+
+//32-bit adder for the ARITH subckt
+.subckt ADD32 A[31:0] B[31:0] Cin S[31:0] Cout 
+.connect Cin cnode[0]
+Xadder FA A[31:0] B[31:0] cnode[31:0] S[31:0] cnode[32:1]
+.connect Cout cnode[32]
+.ends
+
+.subckt CSADD32 A[31:0] B[31:0] Cin S[31:0] Cout
+.connect Cin cnode[0]
+Xadd3 FA A[2:0] B[2:0] cnode[2:0] S[2:0] cnode[3:1]
+Xadd4 CSADD4 A[6:3] B[6:3] cnode[3] S[6:3] cnode[4]
+Xadd5 CSADD5 A[11:7] B[11:7] cnode[4] S[11:7] cnode[5]
+Xadd9 CSADD9 A[20:12] B[20:12] cnode[5] S[20:12] cnode[6]
+Xadd11 CSADD11 A[31:21] B[31:21] cnode[6] S[31:21] cnode[7]
+.connect Cout cnode[7]
+.ends
+
+.subckt CSADD11 A[10:0] B[10:0] Cin S[10:0] Cout
+.connect gnd cnode0[0]
+.connect vdd cnode1[0]
+Xadder0 FA A[10:0] B[10:0] cnode0[10:0] S0[10:0] cnode0[11:1]
+Xadder1 FA A[10:0] B[10:0] cnode1[10:0] S1[10:0] cnode1[11:1]
+Xcoutmux mux2 Cin cnode0[11] cnode1[11] Cout
+Xsummux mux2 Cin#11 S0[10:0] S1[10:0] S[10:0]
+.ends
+
+.subckt CSADD9 A[8:0] B[8:0] Cin S[8:0] Cout
+.connect gnd cnode0[0]
+.connect vdd cnode1[0]
+Xadder0 FA A[8:0] B[8:0] cnode0[8:0] S0[8:0] cnode0[9:1]
+Xadder1 FA A[8:0] B[8:0] cnode1[8:0] S1[8:0] cnode1[9:1]
+Xcoutmux mux2 Cin cnode0[9] cnode1[9] Cout
+Xsummux mux2 Cin#9 S0[8:0] S1[8:0] S[8:0]
+.ends
+
+.subckt CSADD5 A[4:0] B[4:0] Cin S[4:0] Cout
+.connect gnd cnode0[0]
+.connect vdd cnode1[0]
+Xadder0 FA A[4:0] B[4:0] cnode0[4:0] S0[4:0] cnode0[5:1]
+Xadder1 FA A[4:0] B[4:0] cnode1[4:0] S1[4:0] cnode1[5:1]
+Xcoutmux mux2 Cin cnode0[5] cnode1[5] Cout
+Xsummux mux2 Cin#5 S0[4:0] S1[4:0] S[4:0]
+.ends
+
+.subckt CSADD4 A[3:0] B[3:0] Cin S[3:0] Cout
+.connect gnd cnode0[0]
+.connect vdd cnode1[0]
+Xadder0 FA A[3:0] B[3:0] cnode0[3:0] S0[3:0] cnode0[4:1]
+Xadder1 FA A[3:0] B[3:0] cnode1[3:0] S1[3:0] cnode1[4:1]
+Xcoutmux mux2 Cin cnode0[4] cnode1[4] Cout
+Xsummux mux2 Cin#4 S0[3:0] S1[3:0] S[3:0]
+.ends
+
+//full adder for use in 32-bit adder
+.subckt FA A B Cin S Cout
+Xxor1 xor2 A B n1
+Xxor2 xor2 n1 Cin S
+Xn1 nand2 A B n2
+Xn2 nand2 A Cin n3
+Xn3 nand2 B Cin n4
+Xn4 nand3 n2 n3 n4 Cout
+.ends
+
+//join for using with iterators
+.subckt join S T
+.connect S T 
+.ends

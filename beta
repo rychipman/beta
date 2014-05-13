@@ -2,11 +2,11 @@
 //.include "/shared/jsim/lab6checkoff.jsim"
 
 //Components
-.include "L6/helpers"
-.include "L6/PC"
-.include "L6/REGFILE"
-.include "L6/CTL"
-.include "L6/ALU"
+.include "DP/helpers"
+.include "DP/beta_PC"
+.include "DP/beta_REGFILE"
+.include "DP/beta_CTL"
+.include "DP/beta_ALU"
 
 .subckt beta clk reset irq ia[31:0] id[31:0] ma[31:0] moe mrd[31:0] wr mwd[31:0]
 
