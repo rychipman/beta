@@ -11,14 +11,14 @@ VDD vdd gnd 1v
 Xbeta beta clk reset gnd ia[31:0] id[31:0] ma[31:0] moe mrd[31:0] wr mwd[31:0] 
 
 // 100ns cycle time, assert RESET for first cycle. Your cycle time may vary...
-Vclk clk gnd clock(1,0,17ns)
-Vreset reset gnd step(1,0,18ns)
+Vclk clk gnd clock(1,0,15.3ns)
+Vreset reset gnd step(1,0,16.3ns)
  
 // Run the simulation for 1104 cycles. Your design might require more or less 
 // cycles depending on how it executes instructions. Run only as long as necessary 
 // to complete the benchmark since the ending simulation time is used to compute 
 // your circuit's Benmark 
-.tran 18768ns 
+.tran 16892ns
 
 // your memory must also be called Gmem (so the checkoff code can find it!) but 
 // can have a different number of ports. It should however be initialized with 
