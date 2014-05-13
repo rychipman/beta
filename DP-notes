@@ -3,7 +3,7 @@ Checklist of Stuff to DO
 
 Size Reduction
 --------------
-- The benchmark DOESN'T USE the multiply instructions; so the first thing you should do is to axe your multiplier, if you have one, and take credit for the size reduction. All other instructions should work as before. The benchmark does require a 1024-word memory so there's no size reduction possible there.
+X The benchmark DOESN'T USE the multiply instructions; so the first thing you should do is to axe your multiplier, if you have one, and take credit for the size reduction. All other instructions should work as before. The benchmark does require a 1024-word memory so there's no size reduction possible there.
 
 - The biggest single size reduction comes from eliminating one port on the multi-port main memory by combining the read and write data ports, multiplexing a single 32-bit bus between read and write data (we'll never need both in the same cycle!). Use tristate drivers to send write data to the memory's data pins (the memory has these built-in for sending data back to the processor -- that's what the MOE signal has been controlling). The write-up for the Standard Cell library has more documentation for the memory component.
 
@@ -16,7 +16,7 @@ Size Reduction
 
 Time Reduction
 --------------
-- Determine your minimum clock cycle. Here's a recipe:
+X Determine your minimum clock cycle. Here's a recipe:
 	
 	- Look at min observed setup time reported when you click the Stats after simulation completes. Say it says 72.123ns -- this is the amount of time by which you can shorted your clock cycle. We don't recommend trying to shave it too close -- in this case one could shave maybe 72ns from the clock cycle. Note that this number is related to the actual code and data of the benchmark code and the cycle time you can get away with will be smaller than reported by timing analysis, which is computing the worst-case tPD. In real life, your boss will make you use the worst-case number!
 	

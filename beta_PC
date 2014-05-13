@@ -14,6 +14,23 @@ Xmux2 MUX32 pcsel[2] mux4out[31:0] xadr[31:0] mux2out[31:0]
 Xresetmux MUX32 reset mux2out[31:0] reset[31:0] d[31:0]
 
 Xreg PCREG d[31:0] clk q[31:0]
+
 Xadd ADD32 gnd#29 vdd gnd#2 q[31:0] gnd pcplus4[31:0] cout
+
 Xjoin join q[30:0] ia[30:0]
+.ends
+
+.subckt Xpcinc q[31:0] pcplus4[31:0] cout
+//First 2 bits
+Xjoin join pcplus4[1:0] q[1:0]
+
+//2^2 bit
+Xxor4 xor2 q[2] vdd pcplus4[2]
+.connect q[2] carryout[2]
+
+//high-order bits
+Xcarry and2 carryout[30:2] q[31:3] carryout[31:3]
+Xsum xor2 q[31:3] carryout[30:2] pcplus4[31:3]
+
+.connect carryout[31] cout
 .ends
